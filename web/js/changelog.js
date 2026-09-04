@@ -36,6 +36,7 @@ function closeChangelog(){ clEl.classList.remove('on'); }
 
 export function initChangelog(){
   document.getElementById('clx').onclick = closeChangelog;
+  const notes = document.getElementById('notesbtn'); if(notes) notes.onclick = openChangelog;
   clEl.onclick = (e)=>{ if(e.target === clEl) closeChangelog(); };
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && clEl.classList.contains('on')) closeChangelog(); });
   onLang(renderChangelog);

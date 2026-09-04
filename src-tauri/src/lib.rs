@@ -12,7 +12,31 @@ fn open_folder(path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn launcher_config(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let base = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    Ok(base.join("launcher.json"))
+}
+
+fn read_game_override(app: &tauri::AppHandle) -> Option<PathBuf> {
+    let txt = std::fs::read_to_string(launcher_config(app).ok()?).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&txt).ok()?;
+    let s = v.get("game_dir")?.as_str()?.trim().to_string();
+    if s.is_empty() { None } else { Some(PathBuf::from(s)) }
+}
+
+fn write_game_override(app: &tauri::AppHandle, dir: &str) -> Result<(), String> {
+    let cfg = launcher_config(app)?;
+    if let Some(parent) = cfg.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let json = serde_json::json!({ "game_dir": dir }).to_string();
+    std::fs::write(cfg, json).map_err(|e| e.to_string())
+}
+
 fn game_install_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    if let Some(dir) = read_game_override(app) {
+        return Ok(dir);
+    }
     let base = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
     Ok(base.join("game"))
 }
@@ -202,6 +226,77 @@ fn open_saves_dir() -> Result<(), String> {
 }
 
 #[tauri::command]
+fn game_folder(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(game_install_dir(&app)?.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn change_game_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let script = "Add-Type -AssemblyName System.Windows.Forms | Out-Null; \
+        $d = New-Object System.Windows.Forms.FolderBrowserDialog; \
+        if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::Out.Write($d.SelectedPath) }";
+    let out = Command::new("powershell")
+        .args(["-NoProfile", "-Sta", "-Command", script])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if path.is_empty() {
+        return Ok(None);
+    }
+    write_game_override(&app, &path)?;
+    Ok(Some(path))
+}
+
+#[tauri::command]
+fn save_diagnostics(app: tauri::AppHandle) -> Result<String, String> {
+    let base = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    let stage = base.join("diag");
+    let _ = std::fs::remove_dir_all(&stage);
+    std::fs::create_dir_all(&stage).map_err(|e| e.to_string())?;
+
+    let install = game_install_dir(&app)?;
+    let installed = find_game(&app).is_some();
+    let gver = read_local_manifest(&app)
+        .map(|(_, m)| m.version)
+        .unwrap_or_else(|| "-".into());
+    let report = format!(
+        "Naglfar Launcher — diagnostics\nLauncher: v{}\nOS: {} ({})\nDossier du jeu: {}\nJeu installe: {}\nVersion du jeu: {}\n",
+        env!("CARGO_PKG_VERSION"),
+        std::env::consts::OS,
+        std::env::consts::ARCH,
+        install.display(),
+        installed,
+        gver
+    );
+    std::fs::write(stage.join("report.txt"), report).map_err(|e| e.to_string())?;
+    if let Some((dir, _)) = read_local_manifest(&app) {
+        let src = dir.join("game.json");
+        if src.exists() {
+            let _ = std::fs::copy(&src, stage.join("game.json"));
+        }
+    }
+    if let Ok(cfg) = launcher_config(&app) {
+        if cfg.exists() {
+            let _ = std::fs::copy(&cfg, stage.join("launcher.json"));
+        }
+    }
+
+    let home = std::env::var("USERPROFILE").map_err(|e| e.to_string())?;
+    let out = format!("{}\\Desktop\\naglfar-diagnostics.zip", home);
+    let cmd = format!(
+        "Compress-Archive -Path '{}\\*' -DestinationPath '{}' -Force",
+        stage.display(),
+        out
+    );
+    Command::new("powershell")
+        .args(["-NoProfile", "-Command", &cmd])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let _ = open_folder(&format!("{}\\Desktop", home));
+    Ok(out)
+}
+
+#[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     Command::new("cmd").args(["/C", "start", "", &url]).spawn().map_err(|e| e.to_string())?;
     Ok(())
@@ -284,6 +379,9 @@ pub fn run() {
             game_download,
             open_install_dir,
             open_saves_dir,
+            game_folder,
+            change_game_folder,
+            save_diagnostics,
             open_url,
             verify_files,
             app_version,

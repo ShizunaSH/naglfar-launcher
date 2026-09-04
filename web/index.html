@@ -7,18 +7,17 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/titlebar.css">
 <link rel="stylesheet" href="css/hero.css">
-<link rel="stylesheet" href="css/sidebar.css">
-<link rel="stylesheet" href="css/console.css">
+<link rel="stylesheet" href="css/settings.css">
 <link rel="stylesheet" href="css/changelog.css">
 </head>
 <body>
 <div class="stage">
   <div class="win" id="win">
+    <div class="hero" id="bgart"></div>
     <canvas id="scene"></canvas>
-
-    <div class="bgart" id="bgart"></div>
-
+    <div class="scrim"></div>
     <div class="frame"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+
     <div class="titlebar" data-tauri-drag-region>
       <img class="tb-icon" src="assets/icon.png" alt="" data-tauri-drag-region>
       <div class="tb-name" data-tauri-drag-region><b>NAGLFAR</b> LAUNCHER</div>
@@ -30,77 +29,47 @@
       <button class="wc close" title="Fermer">✕</button>
     </div>
 
-    <div class="xana" aria-hidden="true">
-      <svg viewBox="0 0 200 200" fill="none" stroke="#ff3a4f" stroke-width="4" stroke-linecap="round">
-        <path d="M18 100 Q100 28 182 100 Q100 172 18 100 Z"/>
-        <ellipse cx="100" cy="100" rx="34" ry="30"/>
-        <circle cx="100" cy="100" r="10" fill="#ff3a4f" stroke="none"/>
-        <path d="M100 28 L100 6"/><path d="M100 172 L100 194"/>
-        <path d="M42 60 L24 42"/><path d="M158 60 L176 42"/>
-        <path d="M42 140 L24 158"/><path d="M158 140 L176 158"/>
-      </svg>
+    <div class="topbar">
+      <div class="lang"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
+      <button class="gear" id="gear" data-i18n-title="settings" title="Options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>
+        </svg>
+        <i class="gear-dot" hidden></i>
+      </button>
     </div>
 
-    <div class="ui">
-      <h1 class="word">CODE&nbsp;<em id="g1" data-t="LYOKO">LYOKO</em><br><span class="l2">RESURGENCE</span></h1>
-
-      <img class="logo" alt="Code Lyoko Resurgence">
-
-      <div class="panel">
-        <span class="chip" id="epchip" hidden><span data-i18n="chip">DERNIER ÉPISODE</span> <span class="n" id="epnum"></span> · <span id="eptitle"></span></span>
-        <div class="row">
-          <div class="playwrap"><button class="virt" id="play"><span class="ic"></span><span class="playlbl" data-i18n="play">JOUER</span><i class="beam"></i></button></div>
-          <button class="gameupd" id="gameupd" hidden><span class="gu-ic">↻</span><span class="gu-txt"></span></button>
-          <button class="upd" id="upd"><span data-i18n="update">Mettre à jour</span><small></small></button>
+    <div class="dock">
+      <div class="dock-main">
+        <img class="logo" alt="Code Lyoko Resurgence">
+        <div class="dock-title" hidden>CODE&nbsp;<em id="g1" data-t="LYOKO">LYOKO</em> <span class="l2">RESURGENCE</span></div>
+        <div class="epline" id="epchip" hidden><span data-i18n="chip">ÉPISODE</span> <span class="epn" id="epnum"></span> · <span id="eptitle"></span></div>
+        <div class="statusline"><span class="sdot" id="sdot"></span><span id="gamestate">Prêt à jouer</span></div>
+        <div class="playrow">
+          <div class="playwrap"><button class="virt" id="play"><span class="ic"></span><span class="playlbl" data-i18n="play">LANCER</span><i class="beam"></i></button></div>
         </div>
-        <div class="ver"><span id="verline">v0.1.0</span><span id="gamestate"></span></div>
+      </div>
+      <div class="dock-side">
+        <div class="socials">
+          <button class="soc" data-url="https://discord.com/invite/gB2SvbzTma" data-i18n-title="t_discord" title="Discord">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a16 16 0 0 0-4-1l-.2.5A13 13 0 0 1 18 6a15 15 0 0 0-12 0 13 13 0 0 1 3.2-1.5L9 4a16 16 0 0 0-4 1A18 18 0 0 0 2 18a13 13 0 0 0 4 2l.9-1.4a9 9 0 0 1-1.5-.7l.4-.3a9 9 0 0 0 8.4 0l.4.3a9 9 0 0 1-1.5.7L18 20a13 13 0 0 0 4-2A18 18 0 0 0 19 5zM9 15a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 9 15zm6 0a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 15 15z"/></svg>
+          </button>
+          <button class="soc" data-url="https://www.youtube.com/@ShizunaSH" data-i18n-title="t_youtube" title="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6" width="20" height="12" rx="3.5"/><path d="M10 9.2v5.6L15 12z" fill="#08111f"/></svg>
+          </button>
+          <button class="soc" data-url="https://x.com/CodeLyokoRES" data-i18n-title="t_twitter" title="Twitter / X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h4.6l4 5.6L16.5 3H21l-6.6 8.2L21.4 21h-4.6l-4.4-6.1L6.9 21H2.4l7-8.6z"/></svg>
+          </button>
+          <button class="soc" data-url="https://codelyokoresurgence.com/gate/" data-i18n-title="t_site" title="Site officiel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></svg>
+          </button>
+        </div>
+        <div class="metaline"><span id="verline">v0.1.0</span> · <button class="link" id="notesbtn" data-i18n="s_changelog">Notes de version</button></div>
       </div>
     </div>
 
-    <aside class="sidebar">
-      <button class="side" data-act="install">
-        <svg viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
-        <span data-i18n="s_install">Dossier d'installation</span>
-      </button>
-      <button class="side" data-act="saves">
-        <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7"/><path d="M9 20v-5h6v5"/></svg>
-        <span data-i18n="s_saves">Dossier des sauvegardes</span>
-      </button>
-      <button class="side" data-act="verify">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/><path d="M9 11l1.6 1.6L14 9"/></svg>
-        <span data-i18n="s_verify">Vérifier les fichiers</span>
-      </button>
-      <button class="side" data-act="changelog">
-        <svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H5V5"/><path d="M15 3v4h4"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>
-        <span data-i18n="s_changelog">Notes de version</span>
-      </button>
-      <div class="side-lang">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></svg>
-        <span data-i18n="s_lang">Langue</span>
-        <div class="lang"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
-      </div>
-      <div class="socials">
-        <button class="soc" data-url="https://discord.com/invite/gB2SvbzTma" data-i18n-title="t_discord" title="Discord">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a16 16 0 0 0-4-1l-.2.5A13 13 0 0 1 18 6a15 15 0 0 0-12 0 13 13 0 0 1 3.2-1.5L9 4a16 16 0 0 0-4 1A18 18 0 0 0 2 18a13 13 0 0 0 4 2l.9-1.4a9 9 0 0 1-1.5-.7l.4-.3a9 9 0 0 0 8.4 0l.4.3a9 9 0 0 1-1.5.7L18 20a13 13 0 0 0 4-2A18 18 0 0 0 19 5zM9 15a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 9 15zm6 0a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 15 15z"/></svg>
-        </button>
-        <button class="soc" data-url="https://www.youtube.com/@ShizunaSH" data-i18n-title="t_youtube" title="YouTube">
-          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6" width="20" height="12" rx="3.5"/><path d="M10 9.2v5.6L15 12z" fill="#08111f"/></svg>
-        </button>
-        <button class="soc" data-url="https://x.com/CodeLyokoRES" data-i18n-title="t_twitter" title="Twitter / X">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h4.6l4 5.6L16.5 3H21l-6.6 8.2L21.4 21h-4.6l-4.4-6.1L6.9 21H2.4l7-8.6z"/></svg>
-        </button>
-        <button class="soc" data-url="https://codelyokoresurgence.com/gate/" data-i18n-title="t_site" title="Site officiel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></svg>
-        </button>
-      </div>
-    </aside>
-
-    <div class="console">
-      <span class="lbl" data-i18n="news">NOUVEAUTÉS</span>
-      <span class="log" id="log"></span><span class="cur">_</span>
-    </div>
-
-    <div class="ov" id="ov"><div class="m" id="ovm">DÉVIRTUALISATION INVERSE…<i><b></b></i></div></div>
+    <div class="ov" id="ov"><div class="m" id="ovm">LANCEMENT…<i><b></b></i></div></div>
 
     <div class="cl" id="cl">
       <div class="cl-box">
@@ -112,6 +81,87 @@
         <div class="cl-body">
           <div class="cl-rail" id="clrail"></div>
           <div class="cl-notes" id="clnotes"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="set" id="set">
+      <div class="set-box">
+        <div class="set-head">
+          <h2 data-i18n="settings">Options</h2>
+          <button class="set-x" id="setx" title="Fermer">✕</button>
+        </div>
+        <div class="set-body">
+          <nav class="set-rail">
+            <button class="set-nav on" data-sec="game">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="3"/><path d="M8 12v3M6.5 13.5h3"/><circle cx="16" cy="12.5" r="1"/><circle cx="18" cy="15.5" r="1"/></svg>
+              <span data-i18n="set_game">Jeu</span>
+            </button>
+            <button class="set-nav" data-sec="updates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 19h14"/></svg>
+              <span data-i18n="set_updates">Mises à jour</span>
+            </button>
+            <button class="set-nav" data-sec="launcher">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 4.8L19 9l-3.5 3.4.8 5-4.3-2.4L7.7 17l.8-5L5 9l4.8-1.2z"/></svg>
+              <span data-i18n="set_launcher">Launcher</span>
+            </button>
+          </nav>
+
+          <div class="set-panes">
+            <section class="set-pane on" data-pane="game">
+              <div class="set-block">
+                <h3 data-i18n="gf_title">Dossier du jeu</h3>
+                <p class="set-desc" data-i18n="gf_desc"></p>
+                <div class="set-path" id="gfpath">—</div>
+                <button class="set-btn" id="gfchange" data-i18n="gf_change">Changer de dossier…</button>
+              </div>
+              <div class="set-sep"></div>
+              <div class="set-block">
+                <h3 data-i18n="rep_title">Réparation</h3>
+                <p class="set-desc" data-i18n="rep_desc"></p>
+                <button class="set-btn" id="repair" data-i18n="rep_btn">Vérifier et réparer</button>
+              </div>
+            </section>
+
+            <section class="set-pane" data-pane="updates">
+              <div class="set-block">
+                <h3 data-i18n="gver_label">Version installée</h3>
+                <div class="set-ver" id="gamever">—</div>
+              </div>
+              <div class="set-sep"></div>
+              <div class="set-block">
+                <h3 data-i18n="ug_title">Mise à jour du jeu</h3>
+                <p class="set-desc" data-i18n="ug_desc"></p>
+                <div class="set-row">
+                  <button class="set-btn" id="ugcheck" data-i18n="ug_btn">Vérifier</button>
+                  <button class="set-btn accent" id="gameupd" hidden><span class="gu-ic">↻</span> <span data-i18n="ug_dl">Télécharger la mise à jour</span> <b class="gu-v"></b></button>
+                </div>
+              </div>
+            </section>
+
+            <section class="set-pane" data-pane="launcher">
+              <div class="set-block">
+                <h3 data-i18n="lu_title">Mise à jour du launcher</h3>
+                <p class="set-desc" data-i18n="lu_desc"></p>
+                <button class="set-btn" id="upd"><span data-i18n="update">Mettre à jour</span> <small></small></button>
+              </div>
+              <div class="set-sep"></div>
+              <div class="set-block">
+                <h3 data-i18n="fold_title">Dossiers</h3>
+                <p class="set-desc" data-i18n="fold_desc"></p>
+                <div class="set-row">
+                  <button class="set-btn" id="opensaves" data-i18n="fold_saves">Sauvegardes</button>
+                  <button class="set-btn" id="openinstall" data-i18n="fold_install">Installation</button>
+                </div>
+              </div>
+              <div class="set-sep"></div>
+              <div class="set-block">
+                <h3 data-i18n="diag_title">Rapport de diagnostic</h3>
+                <p class="set-desc" data-i18n="diag_desc"></p>
+                <button class="set-btn" id="diag" data-i18n="diag_btn">Enregistrer le rapport</button>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>

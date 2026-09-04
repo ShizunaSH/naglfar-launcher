@@ -5,14 +5,15 @@ import * as ov from './overlay.js';
 const updBtn = document.getElementById('upd');
 const updLabel = updBtn.querySelector('[data-i18n="update"]');
 const updSmall = updBtn.querySelector('small');
+const gearDot = document.querySelector('.gear-dot');
 let updState = 'idle', updVersion = '';
 
 function renderUpd(){
   const d = dict();
   const off = (updState==='current' || updState==='checking');
-  updBtn.classList.toggle('updone', off);
   updBtn.classList.toggle('updavail', updState==='available');
   updBtn.disabled = off;
+  if(gearDot) gearDot.hidden = updState!=='available';
   if(updState==='available'){
     updLabel.textContent = d.update;
     updSmall.textContent = updVersion ? ('→ v'+updVersion) : '';
