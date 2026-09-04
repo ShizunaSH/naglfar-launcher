@@ -1,0 +1,13 @@
+{
+  "episode": { "num": "", "fr": "", "en": "" },
+  "versions": [
+    {
+      "v": "0.0.0",
+      "date": "",
+      "latest": true,
+      "notes": [
+        { "k": "new", "fr": "", "en": "" }
+      ]
+    }
+  ]
+}

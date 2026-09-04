@@ -1,0 +1,52 @@
+.cl{ position:absolute; inset:0; z-index:12; display:none;
+  background:radial-gradient(120% 90% at 70% 30%, rgba(10,20,36,.92), rgba(2,4,9,.96));
+  backdrop-filter:blur(4px) }
+.cl.on{ display:grid; place-items:center; animation:clfade .28s ease }
+@keyframes clfade{ from{opacity:0} to{opacity:1} }
+.cl-box{ position:relative; width:min(760px,86%); height:min(520px,80%);
+  display:flex; flex-direction:column; background:linear-gradient(180deg,#070d18,#050810);
+  border:1px solid rgba(63,138,232,.28); border-radius:14px; overflow:hidden;
+  box-shadow:0 30px 90px -30px rgba(0,0,0,.9), inset 0 0 0 1px rgba(63,138,232,.06) }
+.cl-box::before,.cl-box::after{ content:""; position:absolute; width:20px; height:20px; z-index:3; pointer-events:none;
+  border:1.5px solid rgba(63,138,232,.55) }
+.cl-box::before{ top:8px; left:8px; border-right:0; border-bottom:0 }
+.cl-box::after{ bottom:8px; right:8px; border-left:0; border-top:0 }
+.cl-head{ display:flex; align-items:center; gap:12px; padding:16px 20px 14px;
+  border-bottom:1px solid rgba(63,138,232,.18); background:linear-gradient(180deg,rgba(63,138,232,.08),transparent) }
+.cl-head .tag{ font-family:var(--mono); font-size:10px; letter-spacing:.22em; color:var(--green);
+  display:flex; align-items:center; gap:8px }
+.cl-head .tag .d{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 9px var(--green) }
+.cl-head h2{ margin:0; font-family:var(--disp); text-transform:uppercase; letter-spacing:.06em;
+  font-size:22px; color:var(--blue-h); font-weight:700 }
+.cl-x{ margin-left:auto; width:34px; height:34px; border:1px solid rgba(63,138,232,.28); border-radius:8px;
+  background:rgba(63,138,232,.06); color:var(--blue-l); cursor:pointer; font-family:var(--mono); font-size:15px;
+  display:grid; place-items:center; transition:.14s }
+.cl-x:hover{ background:#c42b3a; color:#fff; border-color:#c42b3a }
+.cl-body{ flex:1; display:flex; min-height:0 }
+.cl-rail{ width:158px; flex:none; border-right:1px solid rgba(63,138,232,.14);
+  padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:4px }
+.cl-v{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left;
+  border:0; background:transparent; cursor:pointer; padding:9px 11px; border-radius:8px;
+  border-left:2px solid transparent; transition:.14s }
+.cl-v:hover{ background:rgba(63,138,232,.10) }
+.cl-v.on{ background:rgba(63,138,232,.15); border-left-color:var(--blue-l) }
+.cl-v .vn{ font-family:var(--disp); font-size:16px; letter-spacing:.04em; color:var(--ink); font-weight:700 }
+.cl-v.on .vn{ color:var(--blue-h) }
+.cl-v .vd{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--dim) }
+.cl-v .vlatest{ font-family:var(--mono); font-size:8.5px; letter-spacing:.14em; color:var(--green);
+  border:1px solid rgba(56,255,176,.4); border-radius:4px; padding:1px 5px; margin-top:3px }
+.cl-notes{ flex:1; padding:18px 22px; overflow-y:auto }
+.cl-notes h3{ margin:0 0 4px; font-family:var(--disp); text-transform:uppercase; letter-spacing:.05em;
+  font-size:20px; color:var(--blue-h) }
+.cl-notes .date{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--dim); margin-bottom:16px }
+.cl-item{ display:flex; gap:12px; padding:9px 0; border-bottom:1px solid rgba(63,138,232,.08); align-items:flex-start }
+.cl-item:last-child{ border-bottom:0 }
+.cl-item .k{ flex:none; margin-top:1px; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em;
+  text-transform:uppercase; padding:3px 8px; border-radius:5px; min-width:74px; text-align:center }
+.cl-item .tx{ font-size:13.5px; line-height:1.5; color:var(--ink) }
+.k-new{ color:var(--green); background:rgba(56,255,176,.10); border:1px solid rgba(56,255,176,.3) }
+.k-bal{ color:var(--amber); background:rgba(255,179,71,.10); border:1px solid rgba(255,179,71,.3) }
+.k-fix{ color:var(--red-l); background:rgba(255,58,79,.10); border:1px solid rgba(255,58,79,.3) }
+.k-ui{ color:var(--blue-l); background:rgba(63,138,232,.10); border:1px solid rgba(63,138,232,.3) }
+.cl-rail::-webkit-scrollbar,.cl-notes::-webkit-scrollbar{ width:8px }
+.cl-rail::-webkit-scrollbar-thumb,.cl-notes::-webkit-scrollbar-thumb{ background:rgba(63,138,232,.22); border-radius:8px }

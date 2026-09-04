@@ -1,0 +1,12 @@
+target/
+src-tauri/target/
+.tauri-keys/
+*.key
+release-v*/
+game.json
+node_modules/
+.DS_Store
+Thumbs.db
+src-tauri/game/
+web/changelog.json
+.claude/

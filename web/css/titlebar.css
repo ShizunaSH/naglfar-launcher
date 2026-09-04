@@ -1,0 +1,16 @@
+.titlebar{ position:absolute; top:0; left:0; right:0; height:46px; z-index:6;
+  display:flex; align-items:center; gap:11px; padding:0 104px 0 16px;
+  background:linear-gradient(180deg,#070b14 0%,#070b14 72%,rgba(7,11,20,.88)); border-bottom:1px solid rgba(63,138,232,.16) }
+.tb-status{ margin-left:auto; display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; color:var(--blue-l) }
+.tb-status .d{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 9px var(--green); animation:onair 1.5s ease-in-out infinite }
+@keyframes onair{ 0%,100%{ opacity:1 } 50%{ opacity:.18 } }
+.tb-icon{ width:26px; height:26px; border-radius:6px; box-shadow:0 0 14px -3px rgba(63,138,232,.6) }
+.tb-name{ font-family:var(--disp); text-transform:uppercase; letter-spacing:.10em; font-size:17px; color:var(--sub) }
+.tb-name b{ color:var(--blue-h); font-weight:700 }
+.tb-ver{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-left:2px }
+
+.wctrl{ position:absolute; top:0; right:0; z-index:8; display:flex }
+.wc{ width:46px; height:46px; border:0; background:transparent; color:var(--sub); cursor:pointer;
+  font-family:var(--mono); font-size:14px; line-height:1; display:grid; place-items:center; transition:.12s }
+.wc:hover{ background:rgba(134,188,246,.12); color:var(--blue-h) }
+.wc.close:hover{ background:#c42b3a; color:#fff }

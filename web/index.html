@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naglfar Launcher</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/titlebar.css">
+<link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/console.css">
+<link rel="stylesheet" href="css/changelog.css">
+</head>
+<body>
+<div class="stage">
+  <div class="win" id="win">
+    <canvas id="scene"></canvas>
+
+    <div class="bgart" id="bgart"></div>
+
+    <div class="frame"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+    <div class="titlebar" data-tauri-drag-region>
+      <img class="tb-icon" src="assets/icon.png" alt="" data-tauri-drag-region>
+      <div class="tb-name" data-tauri-drag-region><b>NAGLFAR</b> LAUNCHER</div>
+      <span class="tb-ver" id="tbver" data-tauri-drag-region>v0.1.0</span>
+      <div class="tb-status" data-tauri-drag-region><span class="d"></span> <span data-i18n="online">EN LIGNE</span></div>
+    </div>
+    <div class="wctrl">
+      <button class="wc min" title="Réduire">–</button>
+      <button class="wc close" title="Fermer">✕</button>
+    </div>
+
+    <div class="xana" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#ff3a4f" stroke-width="4" stroke-linecap="round">
+        <path d="M18 100 Q100 28 182 100 Q100 172 18 100 Z"/>
+        <ellipse cx="100" cy="100" rx="34" ry="30"/>
+        <circle cx="100" cy="100" r="10" fill="#ff3a4f" stroke="none"/>
+        <path d="M100 28 L100 6"/><path d="M100 172 L100 194"/>
+        <path d="M42 60 L24 42"/><path d="M158 60 L176 42"/>
+        <path d="M42 140 L24 158"/><path d="M158 140 L176 158"/>
+      </svg>
+    </div>
+
+    <div class="ui">
+      <h1 class="word">CODE&nbsp;<em id="g1" data-t="LYOKO">LYOKO</em><br><span class="l2">RESURGENCE</span></h1>
+
+      <img class="logo" alt="Code Lyoko Resurgence">
+
+      <div class="panel">
+        <span class="chip" id="epchip" hidden><span data-i18n="chip">DERNIER ÉPISODE</span> <span class="n" id="epnum"></span> · <span id="eptitle"></span></span>
+        <div class="row">
+          <div class="playwrap"><button class="virt" id="play"><span class="ic"></span><span class="playlbl" data-i18n="play">JOUER</span><i class="beam"></i></button></div>
+          <button class="gameupd" id="gameupd" hidden><span class="gu-ic">↻</span><span class="gu-txt"></span></button>
+          <button class="upd" id="upd"><span data-i18n="update">Mettre à jour</span><small></small></button>
+        </div>
+        <div class="ver"><span id="verline">v0.1.0</span><span id="gamestate"></span></div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <button class="side" data-act="install">
+        <svg viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
+        <span data-i18n="s_install">Dossier d'installation</span>
+      </button>
+      <button class="side" data-act="saves">
+        <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7"/><path d="M9 20v-5h6v5"/></svg>
+        <span data-i18n="s_saves">Dossier des sauvegardes</span>
+      </button>
+      <button class="side" data-act="verify">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/><path d="M9 11l1.6 1.6L14 9"/></svg>
+        <span data-i18n="s_verify">Vérifier les fichiers</span>
+      </button>
+      <button class="side" data-act="changelog">
+        <svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H5V5"/><path d="M15 3v4h4"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>
+        <span data-i18n="s_changelog">Notes de version</span>
+      </button>
+      <div class="side-lang">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></svg>
+        <span data-i18n="s_lang">Langue</span>
+        <div class="lang"><button data-l="fr">FR</button><button data-l="en">EN</button></div>
+      </div>
+      <div class="socials">
+        <button class="soc" data-url="https://discord.com/invite/gB2SvbzTma" data-i18n-title="t_discord" title="Discord">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a16 16 0 0 0-4-1l-.2.5A13 13 0 0 1 18 6a15 15 0 0 0-12 0 13 13 0 0 1 3.2-1.5L9 4a16 16 0 0 0-4 1A18 18 0 0 0 2 18a13 13 0 0 0 4 2l.9-1.4a9 9 0 0 1-1.5-.7l.4-.3a9 9 0 0 0 8.4 0l.4.3a9 9 0 0 1-1.5.7L18 20a13 13 0 0 0 4-2A18 18 0 0 0 19 5zM9 15a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 9 15zm6 0a1.6 1.6 0 1 1 0-3.2A1.6 1.6 0 0 1 15 15z"/></svg>
+        </button>
+        <button class="soc" data-url="https://www.youtube.com/@ShizunaSH" data-i18n-title="t_youtube" title="YouTube">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6" width="20" height="12" rx="3.5"/><path d="M10 9.2v5.6L15 12z" fill="#08111f"/></svg>
+        </button>
+        <button class="soc" data-url="https://x.com/CodeLyokoRES" data-i18n-title="t_twitter" title="Twitter / X">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h4.6l4 5.6L16.5 3H21l-6.6 8.2L21.4 21h-4.6l-4.4-6.1L6.9 21H2.4l7-8.6z"/></svg>
+        </button>
+        <button class="soc" data-url="https://codelyokoresurgence.com/gate/" data-i18n-title="t_site" title="Site officiel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3 3.2 15 0 18M12 3c-3.2 3-3.2 15 0 18"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <div class="console">
+      <span class="lbl" data-i18n="news">NOUVEAUTÉS</span>
+      <span class="log" id="log"></span><span class="cur">_</span>
+    </div>
+
+    <div class="ov" id="ov"><div class="m" id="ovm">DÉVIRTUALISATION INVERSE…<i><b></b></i></div></div>
+
+    <div class="cl" id="cl">
+      <div class="cl-box">
+        <div class="cl-head">
+          <span class="tag"><span class="d"></span> <span data-i18n="cl_tag">JOURNAL DE BORD</span></span>
+          <h2 data-i18n="cl_title">Notes de version</h2>
+          <button class="cl-x" id="clx" title="Fermer">✕</button>
+        </div>
+        <div class="cl-body">
+          <div class="cl-rail" id="clrail"></div>
+          <div class="cl-notes" id="clnotes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

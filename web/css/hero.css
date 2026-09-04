@@ -1,0 +1,85 @@
+.ui{ position:absolute; inset:0; z-index:4; padding:54px 38px 22px }
+
+.eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.24em; color:var(--blue-l);
+  display:flex; align-items:center; gap:9px }
+.eyebrow .d{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 9px var(--green) }
+.word{ font-family:var(--disp); text-transform:uppercase; font-weight:700; line-height:.86;
+  letter-spacing:.015em; margin:14px 0 0; font-size:clamp(40px,6.2vw,74px) }
+.word .l2{ color:var(--blue-h) }
+
+.logo{ display:none; margin:-66px 0 -40px -30px; width:min(360px,42%); height:auto; filter:drop-shadow(0 6px 20px rgba(0,0,0,.5)) }
+.word em{ font-style:normal; position:relative }
+.word em::before,.word em::after{ content:attr(data-t); position:absolute; inset:0; opacity:0 }
+.word em.go::before{ color:#39e0ff; animation:gx .42s steps(2) }
+.word em.go::after{ color:var(--red); animation:gy .42s steps(2) }
+@keyframes gx{ 30%{opacity:.55;transform:translate(-3px,1px)} }
+@keyframes gy{ 30%{opacity:.5;transform:translate(3px,-1px)} }
+
+.panel{ position:absolute; left:38px; bottom:64px; width:min(430px,52%) }
+.chip{ display:inline-flex; gap:9px; align-items:center; font-family:var(--mono); font-size:11.5px;
+  letter-spacing:.05em; color:var(--blue-h); padding:6px 13px; margin-bottom:20px;
+  background:rgba(63,138,232,.08); border:1px solid rgba(63,138,232,.28);
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px) }
+.chip[hidden]{ display:none }
+.chip .n{ color:var(--amber); font-weight:700 }
+.row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+
+.playwrap{ position:relative; display:inline-block; border-radius:14px; padding:2px; overflow:hidden }
+.playwrap::before{ content:""; position:absolute; inset:-60%; z-index:0;
+  background:conic-gradient(from 0deg, transparent 0 56%, var(--blue) 72%, var(--blue-l) 82%, transparent 92%);
+  animation:spin 3.2s linear infinite }
+.virt{ position:relative; z-index:1; overflow:hidden; display:inline-flex; align-items:center; gap:11px;
+  font-family:var(--body); font-weight:600; font-size:17px; letter-spacing:.02em; color:#fff;
+  cursor:pointer; border:0; border-radius:12px; padding:15px 36px; transition:.16s ease;
+  background:linear-gradient(180deg,#123a66,#0c2544); box-shadow:inset 0 0 0 1px rgba(134,188,246,.4) }
+.virt .ic{ width:0; height:0; border-left:12px solid #fff; border-top:8px solid transparent;
+  border-bottom:8px solid transparent; filter:drop-shadow(0 0 5px rgba(160,210,255,.6)) }
+.virt .beam{ position:absolute; top:0; left:-30%; width:22%; height:100%; pointer-events:none; z-index:2;
+  background:linear-gradient(90deg,transparent,rgba(160,210,255,.55),transparent); animation:beam 2.6s linear infinite }
+.virt::after{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px); opacity:.5 }
+.virt:hover{ box-shadow:inset 0 0 0 1px var(--blue-l), 0 0 26px -8px rgba(63,138,232,.7) }
+@keyframes spin{ to{ transform:rotate(360deg) } }
+@keyframes beam{ 0%{ left:-30% } 60%,100%{ left:120% } }
+
+.xana{ position:absolute; left:30px; bottom:34px; width:380px; height:380px; z-index:2; opacity:.12;
+  pointer-events:none; filter:drop-shadow(0 0 30px rgba(255,58,79,.4)); animation:xpulse 5s ease-in-out infinite }
+@keyframes xpulse{ 50%{ opacity:.19 } }
+.xana svg, .xana img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain }
+
+.upd{ font-family:var(--body); font-weight:600; font-size:14px; color:#ffe0e3; cursor:pointer;
+  border:1px solid rgba(255,58,79,.55); border-radius:12px; padding:13px 20px; transition:.16s ease;
+  background:linear-gradient(180deg, rgba(255,58,79,.26), rgba(150,24,38,.34));
+  box-shadow:inset 0 0 0 1px rgba(255,138,134,.22), 0 6px 18px -10px rgba(255,58,79,.6) }
+.upd:hover{ transform:translateY(-1px); border-color:var(--red);
+  background:linear-gradient(180deg, rgba(255,58,79,.38), rgba(175,28,44,.46));
+  box-shadow:inset 0 0 0 1px rgba(255,160,156,.35), 0 0 24px -8px rgba(255,58,79,.75) }
+.upd small{ font-family:var(--mono); font-weight:700; color:var(--red-l); opacity:1; margin-left:8px }
+.upd.updavail{ border-color:var(--red); animation:updpulse 1.9s ease-in-out infinite }
+@keyframes updpulse{ 0%,100%{ box-shadow:inset 0 0 0 1px rgba(255,138,134,.28), 0 6px 18px -10px rgba(255,58,79,.6) }
+  50%{ box-shadow:inset 0 0 0 1px rgba(255,160,156,.5), 0 0 26px -6px rgba(255,58,79,.85) } }
+
+.gameupd{ display:inline-flex; align-items:center; gap:8px; font-family:var(--body); font-weight:600; font-size:14px;
+  color:var(--blue-h); cursor:pointer; border:1px solid rgba(63,138,232,.55); border-radius:12px; padding:13px 18px;
+  background:linear-gradient(180deg, rgba(63,138,232,.24), rgba(18,50,95,.34)); transition:.16s ease;
+  box-shadow:inset 0 0 0 1px rgba(134,188,246,.22), 0 6px 18px -10px rgba(63,138,232,.6) }
+.gameupd[hidden]{ display:none }
+.gameupd:hover{ transform:translateY(-1px); border-color:var(--blue-l);
+  box-shadow:inset 0 0 0 1px rgba(160,210,255,.4), 0 0 24px -8px rgba(63,138,232,.85) }
+.gameupd .gu-ic{ font-size:15px; line-height:1 }
+.gameupd .gu-txt{ font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.04em }
+
+.upd.updone, .upd:disabled{ cursor:default; color:var(--sub);
+  background:linear-gradient(180deg, rgba(120,140,165,.12), rgba(70,85,105,.16));
+  border-color:rgba(140,165,195,.28); box-shadow:none }
+.upd.updone:hover, .upd:disabled:hover{ transform:none;
+  background:linear-gradient(180deg, rgba(120,140,165,.12), rgba(70,85,105,.16));
+  border-color:rgba(140,165,195,.28); box-shadow:none }
+
+.ver{ margin-top:18px; font-family:var(--mono); font-size:11.5px; color:var(--dim); display:flex; gap:16px }
+.ver b{ color:var(--sub); font-weight:400 }
+
+.tstate{ position:absolute; right:60px; top:calc(50% + 130px); text-align:right;
+  font-family:var(--mono); z-index:4 }
+.tstate .big{ font-size:14px; letter-spacing:.2em; color:var(--red); text-shadow:0 0 16px rgba(255,58,79,.55) }
+.tstate .sm{ font-size:10.5px; letter-spacing:.14em; color:var(--dim); margin-top:5px }
