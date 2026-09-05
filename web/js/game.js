@@ -2,45 +2,52 @@ import { dict, getLang, onLang } from './i18n.js';
 import { invoke, listen, hasCore, currentWindow } from './tauri.js';
 import * as ov from './overlay.js';
 
-let gameMode = 'ready', gameVer = null, gameUpdVer = null, gameBusy = false;
+let gameMode = 'ready', gameVer = null, gameUpdVer = null, gameBusy = false, gameNoManifest = false;
 let dlState = 'idle';
 
-function setStatus(mode){
+function displayState(){
+  if(dlState==='downloading') return 'downloading';
+  if(dlState==='paused') return 'paused';
+  if(gameMode==='missing') return 'missing';
+  if(gameMode==='corrupt') return 'corrupt';
+  if(gameUpdVer || gameNoManifest) return 'update';
+  return 'ready';
+}
+
+function setStatus(){
   const d=dict(), gs=document.getElementById('gamestate'), mk=document.getElementById('smark');
+  const s=displayState();
   let txt=d.ready, warn=false;
-  if(mode==='missing'){ txt=d.st_missing; warn=true; }
-  else if(mode==='corrupt'){ txt=d.st_repair; warn=true; }
-  else if(mode==='busy'){ txt=d.st_busy; }
+  if(s==='missing'){ txt=d.st_missing; warn=true; }
+  else if(s==='corrupt'){ txt=d.st_repair; warn=true; }
+  else if(s==='update'){ txt = gameUpdVer ? ('→ v'+gameUpdVer) : d.st_update; }
   if(gs) gs.textContent=txt;
   if(mk) mk.classList.toggle('warn', warn);
 }
 
 function refreshPlayLabel(){
   const d=dict(), el=document.querySelector('#play .playlbl'), btn=document.getElementById('play');
+  const s=displayState();
   let label = d.play;
-  if(dlState==='downloading') label = d.pause;
-  else if(dlState==='paused') label = d.resume;
-  else if(gameMode==='missing') label = d.play_install;
-  else if(gameMode==='corrupt') label = d.play_repair;
-  if(el) el.textContent = label;
-  if(btn) btn.classList.toggle('dl', dlState==='downloading');
+  if(s==='downloading') label=d.pause;
+  else if(s==='paused') label=d.resume;
+  else if(s==='missing') label=d.play_install;
+  else if(s==='corrupt') label=d.play_repair;
+  else if(s==='update') label=d.play_update;
+  if(el) el.textContent=label;
+  if(btn){ btn.classList.toggle('dl', s==='downloading'); btn.classList.toggle('up', s==='update'); }
 }
 
 function refreshGameUI(){
   const d=dict();
   refreshPlayLabel();
-  if(dlState==='idle') setStatus(gameMode);
+  if(dlState==='idle') setStatus();
   const ver=document.getElementById('gamever');
   if(ver) ver.textContent = gameVer ? ('v'+gameVer) : d.g_missing;
   const chip=document.getElementById('gameupd');
   if(chip){
     if(gameUpdVer){ const v=chip.querySelector('.gu-v'); if(v) v.textContent='v'+gameUpdVer; chip.hidden=false; }
     else chip.hidden=true;
-  }
-  const pill=document.getElementById('gameupdpill');
-  if(pill){
-    if(gameUpdVer && !gameBusy){ const v=pill.querySelector('.lupd-v'); if(v) v.textContent='→ v'+gameUpdVer; pill.hidden=false; }
-    else pill.hidden=true;
   }
 }
 
@@ -78,7 +85,7 @@ export async function downloadGame(){
       if(stat && total>1024) stat.textContent = fmtSize(received)+' / '+fmtSize(total)+'  (@ '+fmtSpeed(speed)+')';
     });
     const v = await invoke('game_download');
-    gameVer=v; gameUpdVer=null; gameMode='ready'; dlState='idle';
+    gameVer=v; gameUpdVer=null; gameNoManifest=false; gameMode='ready'; dlState='idle';
     if(fill) fill.style.width='100%'; if(pctEl) pctEl.textContent='100%';
     setTimeout(()=>{ showProgress(false); refreshGameUI(); }, 900);
   }catch(err){
@@ -90,17 +97,22 @@ export async function downloadGame(){
 }
 
 export async function refreshGame(){
-  if(!hasCore()){ gameMode='ready'; gameVer=null; gameUpdVer=null; refreshGameUI(); return; }
+  if(!hasCore()){ gameMode='ready'; gameVer=null; gameUpdVer=null; gameNoManifest=false; refreshGameUI(); return; }
   try{
     const st = await invoke('game_status');
     gameVer = st.version || null;
     gameMode = st.installed ? 'ready' : 'missing';
+    gameNoManifest = st.installed && !st.version;
     refreshGameUI();
   }catch(e){}
   try{
     const up = await invoke('game_check_update');
-    if(up && !up.installed) gameMode='missing';
-    gameUpdVer = (up && up.available && up.installed) ? up.version : null;
+    if(gameNoManifest){
+      gameUpdVer = (up && up.version) ? up.version : '';
+    } else {
+      if(up && !up.installed && up.available) gameMode='missing';
+      gameUpdVer = (up && up.available && up.installed) ? up.version : null;
+    }
     refreshGameUI();
   }catch(e){}
 }
@@ -129,14 +141,12 @@ function launchGame(){
 
 export function initGame(){
   document.getElementById('play').onclick=()=>{
-    if(dlState==='downloading'){ invoke('pause_download').catch(()=>{}); return; }
-    if(dlState==='paused'){ downloadGame(); return; }
+    const s=displayState();
+    if(s==='downloading'){ invoke('pause_download').catch(()=>{}); return; }
     if(gameBusy) return;
-    if(gameMode==='missing' || gameMode==='corrupt'){ downloadGame(); return; }
+    if(s==='paused' || s==='missing' || s==='corrupt' || s==='update'){ downloadGame(); return; }
     launchGame();
   };
-  const pill=document.getElementById('gameupdpill');
-  if(pill) pill.onclick=()=>{ if(!gameBusy) downloadGame(); };
   const cancel=document.getElementById('dlcancel');
   if(cancel) cancel.onclick=()=>{
     if(hasCore()) invoke('cancel_download').catch(()=>{});

@@ -71,6 +71,9 @@
 .virt.dl .ic{ width:14px; height:16px; border:0;
   background:linear-gradient(90deg,#eafffb 0 5px, transparent 5px 9px, #eafffb 9px 14px);
   filter:drop-shadow(0 0 6px rgba(143,245,234,.7)) }
+.virt.up .ic{ width:0; height:0; border:0;
+  border-left:8px solid transparent; border-right:8px solid transparent; border-top:13px solid #eafffb;
+  filter:drop-shadow(0 0 6px rgba(143,245,234,.7)) }
 @keyframes spin{ to{ transform:rotate(360deg) } }
 @keyframes beam{ 0%{ left:-30% } 60%,100%{ left:120% } }
 

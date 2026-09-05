@@ -2,8 +2,8 @@ export const I18N = {
   fr:{
     online:"EN LIGNE",
     chip:"ÉPISODE",
-    play:"LANCER", play_install:"INSTALLER", play_repair:"RÉPARER", pause:"Pause", resume:"Reprendre",
-    ready:"Prêt à jouer", st_missing:"Jeu non installé", st_repair:"Réparation nécessaire", st_busy:"Opération en cours…",
+    play:"LANCER", play_install:"INSTALLER", play_repair:"RÉPARER", play_update:"METTRE À JOUR", pause:"Pause", resume:"Reprendre",
+    ready:"Prêt à jouer", st_missing:"Jeu non installé", st_repair:"Réparation nécessaire", st_busy:"Opération en cours…", st_update:"Nouvelle version disponible",
     g_ready:"Jeu", g_missing:"Jeu non installé",
     dl_game:"TÉLÉCHARGEMENT DU JEU", dl_done:"Jeu prêt ✓", dl_err:"Échec du téléchargement du jeu.",
     dl_progress:"Téléchargement du jeu…", lu_pill:"Mettre à jour le launcher", cancel:"Annuler",
@@ -43,8 +43,8 @@ export const I18N = {
   en:{
     online:"ONLINE",
     chip:"EPISODE",
-    play:"PLAY", play_install:"INSTALL", play_repair:"REPAIR", pause:"Pause", resume:"Resume",
-    ready:"Ready to play", st_missing:"Game not installed", st_repair:"Repair needed", st_busy:"Working…",
+    play:"PLAY", play_install:"INSTALL", play_repair:"REPAIR", play_update:"UPDATE", pause:"Pause", resume:"Resume",
+    ready:"Ready to play", st_missing:"Game not installed", st_repair:"Repair needed", st_busy:"Working…", st_update:"New version available",
     g_ready:"Game", g_missing:"Game not installed",
     dl_game:"DOWNLOADING GAME", dl_done:"Game ready ✓", dl_err:"Game download failed.",
     dl_progress:"Downloading game…", lu_pill:"Update the launcher", cancel:"Cancel",
