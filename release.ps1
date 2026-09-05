@@ -18,22 +18,32 @@ if (-not (Test-Path $keyFile)) {
 
 Write-Host "==> Passage en version $Version" -ForegroundColor Cyan
 
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
 $confText = Get-Content $conf -Raw
 $confText = [regex]::Replace($confText, '("version"\s*:\s*")\d+\.\d+\.\d+(")', "`${1}$Version`${2}", 1)
-Set-Content $conf $confText -Encoding utf8 -NoNewline
+[System.IO.File]::WriteAllText($conf, $confText, $utf8NoBom)
 
 $cargoText = Get-Content $cargo -Raw
 $cargoText = [regex]::Replace($cargoText, '(?m)^(version\s*=\s*")\d+\.\d+\.\d+(")', "`${1}$Version`${2}")
-Set-Content $cargo $cargoText -Encoding utf8 -NoNewline
+[System.IO.File]::WriteAllText($cargo, $cargoText, $utf8NoBom)
 
 Write-Host "==> Build signe (peut prendre 1-2 min)" -ForegroundColor Cyan
 $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $keyFile -Raw).Trim()
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ''
 Push-Location $root
 try {
-    & cargo clean -p app --manifest-path src-tauri/Cargo.toml | Out-Null
-    & npx tauri build
-    if ($LASTEXITCODE -ne 0) { throw "Le build a echoue (code $LASTEXITCODE)" }
+    $ErrorActionPreference = 'Continue'
+    cmd /c "cargo clean -p app --manifest-path src-tauri\Cargo.toml"
+    $tauriCmd = @(
+        "$env:APPDATA\npm\tauri.cmd",
+        "C:\Users\Shizuna\AppData\Roaming\npm\tauri.cmd",
+        (Get-Command tauri -ErrorAction SilentlyContinue).Source
+    ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($tauriCmd) { Write-Host "tauri: $tauriCmd"; & $tauriCmd build } else { npx tauri build }
+    $buildCode = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    if ($buildCode -ne 0) { throw "Le build a echoue (code $buildCode)" }
 }
 finally {
     Pop-Location

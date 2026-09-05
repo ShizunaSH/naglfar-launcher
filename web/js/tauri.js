@@ -13,3 +13,10 @@ export function listen(evt, cb){
 export function currentWindow(){
   return (TAURI && TAURI.window) ? TAURI.window.getCurrentWindow() : null;
 }
+
+export async function askDialog(message, opts){
+  if(TAURI && TAURI.dialog && TAURI.dialog.ask){
+    try{ return await TAURI.dialog.ask(message, opts); }catch(e){ return false; }
+  }
+  return false;
+}

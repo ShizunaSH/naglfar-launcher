@@ -14,7 +14,12 @@ try {
 
     $ErrorActionPreference = 'Continue'
     cmd /c "cargo clean -p app --manifest-path src-tauri\Cargo.toml"
-    npx tauri build
+    $tauriCmd = @(
+        "$env:APPDATA\npm\tauri.cmd",
+        "C:\Users\Shizuna\AppData\Roaming\npm\tauri.cmd",
+        (Get-Command tauri -ErrorAction SilentlyContinue).Source
+    ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($tauriCmd) { Write-Host "tauri: $tauriCmd"; & $tauriCmd build } else { npx tauri build }
     $buildCode = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
     if ($buildCode -ne 0) { throw "Le build a echoue (code $buildCode)" }

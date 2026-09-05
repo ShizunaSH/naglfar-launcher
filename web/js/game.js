@@ -37,6 +37,11 @@ function refreshGameUI(){
     if(gameUpdVer){ const v=chip.querySelector('.gu-v'); if(v) v.textContent='v'+gameUpdVer; chip.hidden=false; }
     else chip.hidden=true;
   }
+  const pill=document.getElementById('gameupdpill');
+  if(pill){
+    if(gameUpdVer && !gameBusy){ const v=pill.querySelector('.lupd-v'); if(v) v.textContent='→ v'+gameUpdVer; pill.hidden=false; }
+    else pill.hidden=true;
+  }
 }
 
 export function setGameMode(m){ gameMode=m; refreshGameUI(); }
@@ -130,6 +135,8 @@ export function initGame(){
     if(gameMode==='missing' || gameMode==='corrupt'){ downloadGame(); return; }
     launchGame();
   };
+  const pill=document.getElementById('gameupdpill');
+  if(pill) pill.onclick=()=>{ if(!gameBusy) downloadGame(); };
   const cancel=document.getElementById('dlcancel');
   if(cancel) cancel.onclick=()=>{
     if(hasCore()) invoke('cancel_download').catch(()=>{});
