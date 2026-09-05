@@ -23,8 +23,10 @@ canvas{ position:absolute; inset:46px 0 0 0; width:100%; z-index:2; pointer-even
 
 .scrim{ position:absolute; inset:46px 0 0 0; z-index:3; pointer-events:none;
   background:
+    radial-gradient(135% 120% at 50% 42%, transparent 56%, rgba(2,4,9,.5) 100%),
     linear-gradient(180deg, rgba(3,6,13,.55) 0%, rgba(3,6,13,0) 22%, rgba(3,6,13,0) 42%, rgba(3,6,13,.72) 82%, rgba(3,6,13,.96) 100%),
     linear-gradient(90deg, rgba(3,6,13,.85) 0%, rgba(3,6,13,.25) 34%, rgba(3,6,13,0) 60%),
+    radial-gradient(48% 42% at 13% 90%, rgba(55,230,212,.16), transparent 62%),
     radial-gradient(120% 80% at 50% 120%, rgba(63,138,232,.14), transparent 60%) }
 
 .frame{ position:absolute; inset:14px; pointer-events:none; z-index:5 }

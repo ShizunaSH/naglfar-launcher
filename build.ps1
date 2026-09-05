@@ -11,9 +11,13 @@ if (Test-Path $keyFile) {
 Push-Location $root
 try {
     Get-Process Naglfar, msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force
-    & cargo clean -p app --manifest-path src-tauri/Cargo.toml | Out-Null
-    & npx tauri build
-    if ($LASTEXITCODE -ne 0) { throw "Le build a echoue (code $LASTEXITCODE)" }
+
+    $ErrorActionPreference = 'Continue'
+    cmd /c "cargo clean -p app --manifest-path src-tauri\Cargo.toml"
+    npx tauri build
+    $buildCode = $LASTEXITCODE
+    $ErrorActionPreference = 'Stop'
+    if ($buildCode -ne 0) { throw "Le build a echoue (code $buildCode)" }
 }
 finally {
     Pop-Location

@@ -1,11 +1,15 @@
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
 use sha2::{Digest, Sha256};
 use tauri::{Emitter, Manager};
 
 const GAME_MANIFEST_URL: &str =
     "https://github.com/ShizunaSH/clr-game/releases/latest/download/game.json";
+
+static DL_STOP: AtomicBool = AtomicBool::new(false);
+static DL_DELETE: AtomicBool = AtomicBool::new(false);
 
 fn open_folder(path: &str) -> Result<(), String> {
     Command::new("explorer").arg(path).spawn().map_err(|e| e.to_string())?;
@@ -168,31 +172,72 @@ async fn game_check_update(app: tauri::AppHandle) -> Result<GameUpdate, String> 
 
 #[tauri::command]
 async fn game_download(app: tauri::AppHandle) -> Result<String, String> {
+    DL_STOP.store(false, Ordering::SeqCst);
+    DL_DELETE.store(false, Ordering::SeqCst);
+
     let m = fetch_manifest().await?;
     let dir = game_install_dir(&app)?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let part = dir.join(format!("{}.part", m.file));
     let target = dir.join(&m.file);
+    let total = m.size;
 
-    let mut resp = reqwest::get(&m.url)
-        .await
-        .map_err(|e| e.to_string())?
-        .error_for_status()
-        .map_err(|e| e.to_string())?;
-    let total = resp.content_length().unwrap_or(m.size);
-
-    let mut file = std::fs::File::create(&part).map_err(|e| e.to_string())?;
     let mut hasher = Sha256::new();
     let mut received: u64 = 0;
+    if part.exists() {
+        if let Ok(mut ex) = std::fs::File::open(&part) {
+            let mut buf = vec![0u8; 1 << 20];
+            loop {
+                match ex.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => { hasher.update(&buf[..n]); received += n as u64; }
+                    Err(_) => break,
+                }
+            }
+        }
+    }
+
+    let client = reqwest::Client::new();
+    let mut rb = client.get(&m.url);
+    if received > 0 {
+        rb = rb.header(reqwest::header::RANGE, format!("bytes={}-", received));
+    }
+    let mut resp = rb.send().await.map_err(|e| e.to_string())?
+        .error_for_status().map_err(|e| e.to_string())?;
+
+    let resuming = received > 0 && resp.status().as_u16() == 206;
+    let mut file = if resuming {
+        std::fs::OpenOptions::new().append(true).open(&part).map_err(|e| e.to_string())?
+    } else {
+        received = 0;
+        hasher = Sha256::new();
+        std::fs::File::create(&part).map_err(|e| e.to_string())?
+    };
+
     let mut last_pct: u64 = 101;
-    while let Some(chunk) = resp.chunk().await.map_err(|e| e.to_string())? {
-        file.write_all(&chunk).map_err(|e| e.to_string())?;
-        hasher.update(&chunk);
-        received += chunk.len() as u64;
-        let pct = if total > 0 { (received * 100 / total).min(100) } else { 0 };
-        if pct != last_pct {
-            last_pct = pct;
-            let _ = app.emit("game_dl", pct);
+    let _ = app.emit("game_dl", (received, total));
+    loop {
+        if DL_STOP.load(Ordering::SeqCst) {
+            let _ = file.flush();
+            drop(file);
+            if DL_DELETE.load(Ordering::SeqCst) {
+                let _ = std::fs::remove_file(&part);
+                return Err("cancelled".into());
+            }
+            return Err("paused".into());
+        }
+        match resp.chunk().await.map_err(|e| e.to_string())? {
+            Some(chunk) => {
+                file.write_all(&chunk).map_err(|e| e.to_string())?;
+                hasher.update(&chunk);
+                received += chunk.len() as u64;
+                let pct = if total > 0 { (received * 100 / total).min(100) } else { 0 };
+                if pct != last_pct {
+                    last_pct = pct;
+                    let _ = app.emit("game_dl", (received, total));
+                }
+            }
+            None => break,
         }
     }
     file.flush().map_err(|e| e.to_string())?;
@@ -209,6 +254,26 @@ async fn game_download(app: tauri::AppHandle) -> Result<String, String> {
     let json = serde_json::to_string_pretty(&m).map_err(|e| e.to_string())?;
     std::fs::write(dir.join("game.json"), json).map_err(|e| e.to_string())?;
     Ok(m.version)
+}
+
+#[tauri::command]
+fn pause_download() {
+    DL_STOP.store(true, Ordering::SeqCst);
+}
+
+#[tauri::command]
+fn cancel_download(app: tauri::AppHandle) {
+    DL_DELETE.store(true, Ordering::SeqCst);
+    DL_STOP.store(true, Ordering::SeqCst);
+    if let Ok(dir) = game_install_dir(&app) {
+        if let Ok(rd) = std::fs::read_dir(&dir) {
+            for e in rd.flatten() {
+                if e.path().extension().map(|x| x == "part").unwrap_or(false) {
+                    let _ = std::fs::remove_file(e.path());
+                }
+            }
+        }
+    }
 }
 
 #[tauri::command]
@@ -377,6 +442,8 @@ pub fn run() {
             game_status,
             game_check_update,
             game_download,
+            pause_download,
+            cancel_download,
             open_install_dir,
             open_saves_dir,
             game_folder,
