@@ -27,7 +27,8 @@ $manifest = [ordered]@{
 }
 
 $out = Join-Path $PSScriptRoot 'game.json'
-$manifest | ConvertTo-Json -Depth 3 | Set-Content $out -Encoding utf8 -NoNewline
+$json = $manifest | ConvertTo-Json -Depth 3
+[System.IO.File]::WriteAllText($out, $json, (New-Object System.Text.UTF8Encoding $false))
 
 Write-Host "game.json ecrit : $out" -ForegroundColor Green
 Write-Host "  version : $Version"

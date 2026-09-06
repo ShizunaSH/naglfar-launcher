@@ -117,10 +117,14 @@ struct GameUpdate {
     version: String,
 }
 
+fn strip_bom(s: &str) -> &str {
+    s.strip_prefix('\u{feff}').unwrap_or(s)
+}
+
 fn read_local_manifest(app: &tauri::AppHandle) -> Option<(PathBuf, GameManifest)> {
     for dir in game_dirs(app) {
         if let Ok(txt) = std::fs::read_to_string(dir.join("game.json")) {
-            if let Ok(m) = serde_json::from_str::<GameManifest>(&txt) {
+            if let Ok(m) = serde_json::from_str::<GameManifest>(strip_bom(&txt)) {
                 return Some((dir, m));
             }
         }
@@ -129,14 +133,15 @@ fn read_local_manifest(app: &tauri::AppHandle) -> Option<(PathBuf, GameManifest)
 }
 
 async fn fetch_manifest() -> Result<GameManifest, String> {
-    reqwest::get(GAME_MANIFEST_URL)
+    let txt = reqwest::get(GAME_MANIFEST_URL)
         .await
         .map_err(|e| e.to_string())?
         .error_for_status()
         .map_err(|e| e.to_string())?
-        .json::<GameManifest>()
+        .text()
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    serde_json::from_str::<GameManifest>(strip_bom(&txt)).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

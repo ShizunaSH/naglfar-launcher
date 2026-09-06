@@ -73,7 +73,8 @@ $latest = [ordered]@{
         }
     }
 }
-$latest | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $outDir 'latest.json') -Encoding utf8
+$latestJson = $latest | ConvertTo-Json -Depth 6
+[System.IO.File]::WriteAllText((Join-Path $outDir 'latest.json'), $latestJson, $utf8NoBom)
 
 Write-Host ""
 Write-Host "==> Pret : $outDir" -ForegroundColor Green
