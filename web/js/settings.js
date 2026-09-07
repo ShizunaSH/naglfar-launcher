@@ -30,7 +30,13 @@ export function initSettings(){
   document.querySelectorAll('.set-nav').forEach(b=> b.onclick=()=> selectSection(b.dataset.sec));
 
   document.getElementById('repair').onclick = ()=> runVerify();
-  document.getElementById('ugcheck').onclick = ()=> refreshGame();
+  document.getElementById('ugcheck').onclick = async ()=>{
+    const d=dict(), note=document.getElementById('ugnote');
+    if(note) note.textContent = d.ug_checking;
+    await refreshGame();
+    const chip=document.getElementById('gameupd');
+    if(note) note.textContent = (chip && !chip.hidden) ? d.ug_found : d.ug_none;
+  };
   document.getElementById('gameupd').onclick = ()=> downloadGame();
   document.getElementById('opensaves').onclick = ()=> invoke('open_saves_dir').catch(()=>{});
   document.getElementById('openinstall').onclick = ()=> invoke('open_install_dir').catch(()=>{});
