@@ -23,6 +23,8 @@ function setStatus(){
   else if(s==='update'){ txt = gameUpdVer ? ('→ v'+gameUpdVer) : d.st_update; }
   if(gs) gs.textContent=txt;
   if(mk) mk.classList.toggle('warn', warn);
+  const st=document.getElementById('status');
+  if(st) st.hidden = (s==='ready');   // pas de "Prêt à jouer" quand tout est prêt
 }
 
 function refreshPlayLabel(){

@@ -49,9 +49,9 @@
 .set-btn:hover{ border-color:rgba(63,138,232,.55); background:linear-gradient(180deg, rgba(63,138,232,.24), rgba(18,50,95,.3));
   transform:translateY(-1px); box-shadow:0 8px 20px -12px rgba(63,138,232,.7) }
 .set-btn:active{ transform:none }
-.set-btn.accent{ color:#eafffb; border-color:rgba(143,245,234,.4);
-  background:linear-gradient(180deg, rgba(55,230,212,.22), rgba(10,60,72,.3)) }
-.set-btn.accent:hover{ border-color:var(--cyan-l); box-shadow:0 8px 22px -10px rgba(55,230,212,.7) }
+.set-btn.accent{ color:#ffeef1; border-color:rgba(255,150,166,.4);
+  background:linear-gradient(180deg, rgba(234,77,100,.22), rgba(10,60,72,.3)) }
+.set-btn.accent:hover{ border-color:var(--cyan-l); box-shadow:0 8px 22px -10px rgba(234,77,100,.7) }
 .set-btn[hidden]{ display:none }
 .set-btn:disabled{ cursor:default; color:var(--dim); background:rgba(120,140,165,.1); border-color:rgba(140,165,195,.22); transform:none; box-shadow:none }
 .set-btn small{ font-family:var(--mono); font-weight:700; color:var(--red-l); font-size:11px }

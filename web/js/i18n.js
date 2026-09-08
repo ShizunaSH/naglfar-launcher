@@ -1,7 +1,7 @@
 export const I18N = {
   fr:{
     online:"EN LIGNE",
-    chip:"ÉPISODE",
+    chip:"ÉPISODE", ep_latest:"DERNIÈRE SORTIE",
     play:"LANCER", play_install:"INSTALLER", play_repair:"RÉPARER", play_update:"METTRE À JOUR", pause:"Pause", resume:"Reprendre",
     ready:"Prêt à jouer", st_missing:"Jeu non installé", st_repair:"Réparation nécessaire", st_busy:"Opération en cours…", st_update:"Nouvelle version disponible",
     g_ready:"Jeu", g_missing:"Jeu non installé",
@@ -43,7 +43,7 @@ export const I18N = {
   },
   en:{
     online:"ONLINE",
-    chip:"EPISODE",
+    chip:"EPISODE", ep_latest:"LATEST RELEASE",
     play:"PLAY", play_install:"INSTALL", play_repair:"REPAIR", play_update:"UPDATE", pause:"Pause", resume:"Resume",
     ready:"Ready to play", st_missing:"Game not installed", st_repair:"Repair needed", st_busy:"Working…", st_update:"New version available",
     g_ready:"Game", g_missing:"Game not installed",
