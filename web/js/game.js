@@ -5,45 +5,36 @@ import * as ov from './overlay.js';
 let gameMode = 'ready', gameVer = null, gameUpdVer = null, gameBusy = false, gameNoManifest = false;
 let dlState = 'idle';
 
+let launcherUpd = null;
+
 function displayState(){
   if(dlState==='downloading') return 'downloading';
   if(dlState==='paused') return 'paused';
+  if(launcherUpd) return 'launcher';
   if(gameMode==='missing') return 'missing';
   if(gameMode==='corrupt') return 'corrupt';
   if(gameUpdVer || gameNoManifest) return 'update';
   return 'ready';
 }
-
-function setStatus(){
-  const d=dict(), gs=document.getElementById('gamestate'), mk=document.getElementById('smark');
-  const s=displayState();
-  let txt=d.ready, warn=false;
-  if(s==='missing'){ txt=d.st_missing; warn=true; }
-  else if(s==='corrupt'){ txt=d.st_repair; warn=true; }
-  else if(s==='update'){ txt = gameUpdVer ? ('→ v'+gameUpdVer) : d.st_update; }
-  if(gs) gs.textContent=txt;
-  if(mk) mk.classList.toggle('warn', warn);
-  const st=document.getElementById('status');
-  if(st) st.hidden = (s==='ready');   // pas de "Prêt à jouer" quand tout est prêt
-}
-
-function refreshPlayLabel(){
-  const d=dict(), el=document.querySelector('#play .playlbl'), btn=document.getElementById('play');
-  const s=displayState();
-  let label = d.play;
-  if(s==='downloading') label=d.pause;
-  else if(s==='paused') label=d.resume;
-  else if(s==='missing') label=d.play_install;
-  else if(s==='corrupt') label=d.play_repair;
-  else if(s==='update') label=d.play_update;
-  if(el) el.textContent=label;
-  if(btn){ btn.classList.toggle('dl', s==='downloading'); btn.classList.toggle('up', s==='update'); }
+function refreshPlay(){
+  const d=dict(), s=displayState(), busy=(s==='downloading'||s==='paused');
+  const eye=document.getElementById('play'), upd=document.getElementById('updbtn');
+  if(eye){ eye.hidden=busy; eye.disabled=(s!=='ready'); eye.classList.toggle('off', s!=='ready'); }
+  if(upd){
+    const labels={ launcher:d.lu_pill, missing:d.play_install, corrupt:d.play_repair, update:d.play_update };
+    const v = s==='launcher' ? launcherUpd : (s==='update' ? gameUpdVer : '');
+    upd.hidden = !labels[s];
+    document.getElementById('updlbl').textContent = labels[s] || '';
+    document.getElementById('updver').textContent = v ? 'v'+v : '';
+  }
+  const pause=document.getElementById('dlpause'), label=document.getElementById('proglabel');
+  if(pause) pause.textContent = s==='paused' ? d.resume : d.pause;
+  if(label && busy) label.textContent = s==='paused' ? d.dl_paused : d.dl_progress;
 }
 
 function refreshGameUI(){
   const d=dict();
-  refreshPlayLabel();
-  if(dlState==='idle') setStatus();
+  refreshPlay();
   const ver=document.getElementById('gamever');
   if(ver) ver.textContent = gameVer ? ('v'+gameVer) : d.g_missing;
   const chip=document.getElementById('gameupd');
@@ -56,9 +47,8 @@ function refreshGameUI(){
 export function setGameMode(m){ gameMode=m; refreshGameUI(); }
 
 function showProgress(on){
-  const st=document.getElementById('status'), pr=document.getElementById('progress');
-  if(st) st.hidden = on;
-  if(pr) pr.hidden = !on;
+  const pr=document.getElementById('progress');
+  if(pr){ pr.hidden = !on; pr.classList.remove('err'); }
 }
 function fmtSize(bytes){ const u=getLang()==='en'?' GB':' Go'; return (bytes/1073741824).toFixed(2)+u; }
 function fmtSpeed(bps){
@@ -71,7 +61,6 @@ export async function downloadGame(){
   const d=dict();
   const fill=document.getElementById('progfill'), pctEl=document.getElementById('progpct'),
         stat=document.getElementById('progstat'), label=document.getElementById('proglabel');
-  if(label) label.textContent=d.dl_progress;
   showProgress(true);
   let unlisten=null, lastB=0, lastT=performance.now(), speed=0;
   try{
@@ -94,7 +83,7 @@ export async function downloadGame(){
     const msg = String(err);
     if(msg.includes('paused')){ dlState='paused'; refreshGameUI(); }
     else if(msg.includes('cancelled')){ dlState='idle'; showProgress(false); refreshGame(); }
-    else { dlState='idle'; if(label) label.textContent=d.dl_err; setTimeout(()=>{ showProgress(false); refreshGameUI(); }, 3200); }
+    else { dlState='idle'; if(label) label.textContent=d.dl_err; document.getElementById('progress').classList.add('err'); setTimeout(()=>{ showProgress(false); refreshGameUI(); }, 3200); }
   }finally{ if(unlisten) unlisten(); gameBusy=false; }
 }
 
@@ -142,13 +131,16 @@ function launchGame(){
 }
 
 export function initGame(){
-  document.getElementById('play').onclick=()=>{
-    const s=displayState();
-    if(s==='downloading'){ invoke('pause_download').catch(()=>{}); return; }
-    if(gameBusy) return;
-    if(s==='paused' || s==='missing' || s==='corrupt' || s==='update'){ downloadGame(); return; }
-    launchGame();
+  document.getElementById('play').onclick=()=>{ if(!gameBusy && displayState()==='ready') launchGame(); };
+  document.getElementById('updbtn').onclick=()=>{
+    if(displayState()==='launcher'){ document.dispatchEvent(new Event('launcher-update-install')); return; }
+    if(!gameBusy) downloadGame();
   };
+  document.getElementById('dlpause').onclick=()=>{
+    if(dlState==='downloading') invoke('pause_download').catch(()=>{});
+    else if(dlState==='paused' && !gameBusy) downloadGame();
+  };
+  document.addEventListener('launcher-update', e=>{ launcherUpd = e.detail || null; refreshGameUI(); });
   const cancel=document.getElementById('dlcancel');
   if(cancel) cancel.onclick=()=>{
     if(hasCore()) invoke('cancel_download').catch(()=>{});

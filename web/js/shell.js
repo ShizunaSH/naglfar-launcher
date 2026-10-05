@@ -1,7 +1,7 @@
 import { invoke, hasCore, currentWindow } from './tauri.js';
 
 function initVersion(){
-  const set=(v)=>{ const s='v'+v; const t=document.getElementById('tbver'); const b=document.getElementById('verline'); if(t)t.textContent=s; if(b)b.textContent=s; };
+  const set=(v)=>{ const s='v'+v; const b=document.getElementById('verline'); if(b)b.textContent=s; };
   if(hasCore()) invoke('app_version').then(set).catch(()=>{});
 }
 

@@ -50,13 +50,13 @@ export function initEpisode(){
 
 export function initAssets(){
   (function(){ const el=document.getElementById('bgart'); if(!el) return;
-    const srcs=['assets/bg.png','assets/bg.jpg']; let i=0; const im=new Image();
+    const srcs=['assets/v2/bg.jpg','assets/bg.png']; let i=0; const im=new Image();
     im.onload=()=>{ el.style.backgroundImage=`url(${im.src})`; requestAnimationFrame(()=>el.classList.add('loaded')); };
     im.onerror=()=>{ if(++i<srcs.length) im.src=srcs[i]; };
     im.src=srcs[0]; })();
 
   (function(){ const el=document.querySelector('.logo'); if(!el) return;
-    const srcs=['assets/logo.png','assets/logo.svg']; let i=0; const im=new Image();
+    const srcs=['assets/v2/logo.webp','assets/logo.png']; let i=0; const im=new Image();
     im.onload=()=>{ el.src=im.src; el.style.display='block'; const w=document.querySelector('.dock-title'); if(w) w.hidden=true; };
     im.onerror=()=>{ if(++i<srcs.length) im.src=srcs[i]; else { const w=document.querySelector('.dock-title'); if(w) w.hidden=false; } };
     im.src=srcs[0]; })();

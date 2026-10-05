@@ -43,6 +43,7 @@ async function checkUpdates(prompt){
     updVersion = v || ''; updState = v ? 'available' : 'current';
   }catch(e){ updState='idle'; }
   renderUpd();
+  document.dispatchEvent(new CustomEvent('launcher-update', { detail: updState==='available' ? updVersion : '' }));
   if(prompt && updState==='available') promptInstall();
 }
 
@@ -51,6 +52,7 @@ export function initUpdater(){
     if(updState==='available') promptInstall();
     else if(updState!=='checking') checkUpdates(true);
   };
+  document.addEventListener('launcher-update-install', promptInstall);
   onLang(renderUpd);
   renderUpd();
   checkUpdates(true);

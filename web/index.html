@@ -15,16 +15,9 @@
   <div class="win" id="win">
     <div class="hero" id="bgart"></div>
     <canvas id="scene"></canvas>
-    <div class="scrim"></div>
-    <div class="leftglow"></div>
-    <div class="frame"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+    <img class="cadre" src="assets/v2/cadre.webp" alt="">
 
-    <div class="titlebar" data-tauri-drag-region>
-      <img class="tb-icon" src="assets/icon.png" alt="" data-tauri-drag-region>
-      <div class="tb-name" data-tauri-drag-region><b>NAGLFAR</b> LAUNCHER</div>
-      <span class="tb-ver" id="tbver" data-tauri-drag-region>v0.1.0</span>
-      <div class="tb-status" data-tauri-drag-region><span class="d"></span> <span data-i18n="online">EN LIGNE</span></div>
-    </div>
+    <div class="dragbar" data-tauri-drag-region></div>
     <div class="wctrl">
       <button class="wc min" title="Réduire">–</button>
       <button class="wc close" title="Fermer">✕</button>
@@ -61,33 +54,38 @@
       </div>
     </div>
 
-    <div class="actionbar">
-      <div class="playzone">
-        <div class="playwrap"><button class="virt" id="play"><span class="ic"></span><span class="playlbl" data-i18n="play">LANCER</span><i class="beam"></i></button></div>
-        <button class="gear" id="gear" data-i18n-title="settings" title="Options">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <button class="eye" id="play" data-i18n-title="play" title="Lancer">
+      <img class="eye-on" src="assets/v2/oeil.webp" alt="">
+      <img class="eye-hov" src="assets/v2/oeil_survol.webp" alt="">
+      <img class="eye-off" src="assets/v2/oeil_off.webp" alt="">
+      <span class="eye-hit ring"></span><span class="eye-hit stem"></span><span class="eye-hit base"></span>
+    </button>
+    <button class="gear" id="gear" data-i18n-title="settings" title="Options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3.2"/>
             <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>
           </svg>
-        </button>
-      </div>
+    </button>
+    <button class="upd" id="updbtn" hidden><span class="upd-ic"></span><span id="updlbl"></span><b class="upd-v" id="updver"></b></button>
 
-      <div class="infozone">
-        <div class="status" id="status"><span class="status-mark" id="smark"></span><span id="gamestate">Prêt à jouer</span></div>
-        <div class="progress" id="progress" hidden>
-          <div class="prog-top">
-            <span class="prog-label" id="proglabel" data-i18n="dl_progress">Téléchargement du jeu…</span>
-            <span class="prog-right"><span class="prog-stat" id="progstat"></span><button class="prog-x" id="dlcancel" data-i18n-title="cancel" title="Annuler">✕</button></span>
-          </div>
-          <div class="prog-track"><b class="prog-fill" id="progfill"></b></div>
-          <div class="prog-pct" id="progpct">0%</div>
-        </div>
+    <div class="progress" id="progress" hidden>
+      <div class="prog-top">
+        <span class="prog-label" id="proglabel" data-i18n="dl_progress">Téléchargement du jeu…</span>
+        <span class="prog-stat" id="progstat"></span>
       </div>
+      <div class="prog-track"><b class="prog-fill" id="progfill"></b></div>
+      <div class="prog-bot">
+        <span class="prog-pct" id="progpct">0%</span>
+        <span class="prog-btns">
+          <button class="prog-b" id="dlpause">Pause</button>
+          <button class="prog-b x" id="dlcancel" data-i18n="cancel">Annuler</button>
+        </span>
+      </div>
+    </div>
 
-      <div class="meta">
-        <span id="verline">v0.1.0</span>
-        <button class="link" id="notesbtn" data-i18n="s_changelog">Notes de version</button>
-      </div>
+    <div class="meta">
+      <button class="link" id="notesbtn" data-i18n="s_changelog">Notes de version</button>
+      <span id="verline">v0.1.0</span>
     </div>
 
     <div class="ov" id="ov"><div class="m" id="ovm">LANCEMENT…<i><b></b></i></div></div>
