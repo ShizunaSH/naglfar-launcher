@@ -90,12 +90,25 @@ fn hash_file(path: &Path) -> Result<(u64, String), String> {
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
-struct GameManifest {
-    version: String,
+struct GameFile {
     file: String,
     size: u64,
     sha256: String,
+    #[serde(default)]
     url: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+struct GameManifest {
+    version: String,
+    files: Vec<GameFile>,
+}
+
+#[derive(serde::Deserialize)]
+struct SingleFileManifest {
+    version: String,
+    #[serde(flatten)]
+    file: GameFile,
 }
 
 #[derive(serde::Serialize)]
@@ -121,12 +134,30 @@ fn strip_bom(s: &str) -> &str {
     s.strip_prefix('\u{feff}').unwrap_or(s)
 }
 
+fn parse_manifest(txt: &str) -> Option<GameManifest> {
+    let txt = strip_bom(txt);
+    let m = match serde_json::from_str::<GameManifest>(txt) {
+        Ok(m) => m,
+        Err(_) => {
+            let old = serde_json::from_str::<SingleFileManifest>(txt).ok()?;
+            GameManifest { version: old.version, files: vec![old.file] }
+        }
+    };
+    let plain = |f: &GameFile| !f.file.is_empty() && !f.file.contains(['/', '\\', ':']) && f.file != "..";
+    if m.files.is_empty() || !m.files.iter().all(plain) {
+        return None;
+    }
+    Some(m)
+}
+
+fn read_manifest_in(dir: &Path) -> Option<GameManifest> {
+    parse_manifest(&std::fs::read_to_string(dir.join("game.json")).ok()?)
+}
+
 fn read_local_manifest(app: &tauri::AppHandle) -> Option<(PathBuf, GameManifest)> {
     for dir in game_dirs(app) {
-        if let Ok(txt) = std::fs::read_to_string(dir.join("game.json")) {
-            if let Ok(m) = serde_json::from_str::<GameManifest>(strip_bom(&txt)) {
-                return Some((dir, m));
-            }
+        if let Some(m) = read_manifest_in(&dir) {
+            return Some((dir, m));
         }
     }
     None
@@ -141,7 +172,22 @@ async fn fetch_manifest() -> Result<GameManifest, String> {
         .text()
         .await
         .map_err(|e| e.to_string())?;
-    serde_json::from_str::<GameManifest>(strip_bom(&txt)).map_err(|e| e.to_string())
+    parse_manifest(&txt).ok_or_else(|| "manifest".to_string())
+}
+
+fn pending_files(dir: &Path, remote: &GameManifest, local: Option<&GameManifest>) -> Vec<GameFile> {
+    remote
+        .files
+        .iter()
+        .filter(|f| {
+            let known = local
+                .and_then(|l| l.files.iter().find(|x| x.file == f.file))
+                .map(|x| x.sha256.eq_ignore_ascii_case(&f.sha256))
+                .unwrap_or(false);
+            !(known && dir.join(&f.file).exists())
+        })
+        .cloned()
+        .collect()
 }
 
 #[tauri::command]
@@ -175,6 +221,119 @@ async fn game_check_update(app: tauri::AppHandle) -> Result<GameUpdate, String> 
     Ok(GameUpdate { available, installed, version: remote.version })
 }
 
+async fn fetch_file(
+    client: &reqwest::Client,
+    dir: &Path,
+    f: &GameFile,
+    done: u64,
+    total: u64,
+    progress: &impl Fn(u64, u64),
+) -> Result<(), String> {
+    let part = dir.join(format!("{}.part", f.file));
+    let mut hasher = Sha256::new();
+    let mut have: u64 = 0;
+    if part.exists() {
+        if let Ok(mut ex) = std::fs::File::open(&part) {
+            let mut buf = vec![0u8; 1 << 20];
+            loop {
+                match ex.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => { hasher.update(&buf[..n]); have += n as u64; }
+                    Err(_) => break,
+                }
+            }
+        }
+        if have > f.size {
+            let _ = std::fs::remove_file(&part);
+            hasher = Sha256::new();
+            have = 0;
+        }
+    }
+
+    if have < f.size {
+        let mut rb = client.get(&f.url);
+        if have > 0 {
+            rb = rb.header(reqwest::header::RANGE, format!("bytes={}-", have));
+        }
+        let mut resp = rb.send().await.map_err(|e| e.to_string())?
+            .error_for_status().map_err(|e| e.to_string())?;
+
+        let resuming = have > 0 && resp.status().as_u16() == 206;
+        let mut file = if resuming {
+            std::fs::OpenOptions::new().append(true).open(&part).map_err(|e| e.to_string())?
+        } else {
+            have = 0;
+            hasher = Sha256::new();
+            std::fs::File::create(&part).map_err(|e| e.to_string())?
+        };
+
+        let mut last_pct: u64 = 101;
+        loop {
+            if DL_STOP.load(Ordering::SeqCst) {
+                let _ = file.flush();
+                drop(file);
+                if DL_DELETE.load(Ordering::SeqCst) {
+                    let _ = std::fs::remove_file(&part);
+                    return Err("cancelled".into());
+                }
+                return Err("paused".into());
+            }
+            match resp.chunk().await.map_err(|e| e.to_string())? {
+                Some(chunk) => {
+                    file.write_all(&chunk).map_err(|e| e.to_string())?;
+                    hasher.update(&chunk);
+                    have += chunk.len() as u64;
+                    let pct = if total > 0 { ((done + have) * 100 / total).min(100) } else { 0 };
+                    if pct != last_pct {
+                        last_pct = pct;
+                        progress(done + have, total);
+                    }
+                }
+                None => break,
+            }
+        }
+        file.flush().map_err(|e| e.to_string())?;
+    }
+
+    let hex = hasher.finalize().iter().map(|b| format!("{:02x}", b)).collect::<String>();
+    if have != f.size || !hex.eq_ignore_ascii_case(&f.sha256) {
+        let _ = std::fs::remove_file(&part);
+        return Err("checksum".into());
+    }
+    Ok(())
+}
+
+async fn sync_files(dir: &Path, m: &GameManifest, progress: &impl Fn(u64, u64)) -> Result<(), String> {
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    let local = read_manifest_in(dir);
+    let todo = pending_files(dir, m, local.as_ref());
+    let total: u64 = todo.iter().map(|f| f.size).sum();
+
+    let client = reqwest::Client::new();
+    let mut done: u64 = 0;
+    progress(done, total);
+    for f in &todo {
+        fetch_file(&client, dir, f, done, total, progress).await?;
+        done += f.size;
+        progress(done, total);
+    }
+
+    for f in &todo {
+        let target = dir.join(&f.file);
+        let _ = std::fs::remove_file(&target);
+        std::fs::rename(dir.join(format!("{}.part", f.file)), &target).map_err(|e| e.to_string())?;
+    }
+    if let Some(old) = &local {
+        for f in &old.files {
+            if !m.files.iter().any(|x| x.file == f.file) {
+                let _ = std::fs::remove_file(dir.join(&f.file));
+            }
+        }
+    }
+    let json = serde_json::to_string_pretty(m).map_err(|e| e.to_string())?;
+    std::fs::write(dir.join("game.json"), json).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn game_download(app: tauri::AppHandle) -> Result<String, String> {
     DL_STOP.store(false, Ordering::SeqCst);
@@ -182,82 +341,10 @@ async fn game_download(app: tauri::AppHandle) -> Result<String, String> {
 
     let m = fetch_manifest().await?;
     let dir = game_install_dir(&app)?;
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let part = dir.join(format!("{}.part", m.file));
-    let target = dir.join(&m.file);
-    let total = m.size;
-
-    let mut hasher = Sha256::new();
-    let mut received: u64 = 0;
-    if part.exists() {
-        if let Ok(mut ex) = std::fs::File::open(&part) {
-            let mut buf = vec![0u8; 1 << 20];
-            loop {
-                match ex.read(&mut buf) {
-                    Ok(0) => break,
-                    Ok(n) => { hasher.update(&buf[..n]); received += n as u64; }
-                    Err(_) => break,
-                }
-            }
-        }
-    }
-
-    let client = reqwest::Client::new();
-    let mut rb = client.get(&m.url);
-    if received > 0 {
-        rb = rb.header(reqwest::header::RANGE, format!("bytes={}-", received));
-    }
-    let mut resp = rb.send().await.map_err(|e| e.to_string())?
-        .error_for_status().map_err(|e| e.to_string())?;
-
-    let resuming = received > 0 && resp.status().as_u16() == 206;
-    let mut file = if resuming {
-        std::fs::OpenOptions::new().append(true).open(&part).map_err(|e| e.to_string())?
-    } else {
-        received = 0;
-        hasher = Sha256::new();
-        std::fs::File::create(&part).map_err(|e| e.to_string())?
-    };
-
-    let mut last_pct: u64 = 101;
-    let _ = app.emit("game_dl", (received, total));
-    loop {
-        if DL_STOP.load(Ordering::SeqCst) {
-            let _ = file.flush();
-            drop(file);
-            if DL_DELETE.load(Ordering::SeqCst) {
-                let _ = std::fs::remove_file(&part);
-                return Err("cancelled".into());
-            }
-            return Err("paused".into());
-        }
-        match resp.chunk().await.map_err(|e| e.to_string())? {
-            Some(chunk) => {
-                file.write_all(&chunk).map_err(|e| e.to_string())?;
-                hasher.update(&chunk);
-                received += chunk.len() as u64;
-                let pct = if total > 0 { (received * 100 / total).min(100) } else { 0 };
-                if pct != last_pct {
-                    last_pct = pct;
-                    let _ = app.emit("game_dl", (received, total));
-                }
-            }
-            None => break,
-        }
-    }
-    file.flush().map_err(|e| e.to_string())?;
-    drop(file);
-
-    let hex = hasher.finalize().iter().map(|b| format!("{:02x}", b)).collect::<String>();
-    if received != m.size || !hex.eq_ignore_ascii_case(&m.sha256) {
-        let _ = std::fs::remove_file(&part);
-        return Err("checksum".into());
-    }
-
-    let _ = std::fs::remove_file(&target);
-    std::fs::rename(&part, &target).map_err(|e| e.to_string())?;
-    let json = serde_json::to_string_pretty(&m).map_err(|e| e.to_string())?;
-    std::fs::write(dir.join("game.json"), json).map_err(|e| e.to_string())?;
+    sync_files(&dir, &m, &|received, total| {
+        let _ = app.emit("game_dl", (received, total));
+    })
+    .await?;
     Ok(m.version)
 }
 
@@ -375,15 +462,25 @@ fn open_url(url: String) -> Result<(), String> {
 #[tauri::command]
 fn verify_files(app: tauri::AppHandle) -> Result<VerifyReport, String> {
     if let Some((dir, m)) = read_local_manifest(&app) {
-        let target = dir.join(&m.file);
-        if !target.exists() {
-            return Ok(VerifyReport { status: "missing".into(), detail: m.file });
+        let mut status = "ok";
+        let mut detail = String::new();
+        for f in &m.files {
+            let target = dir.join(&f.file);
+            if !target.exists() {
+                if status == "ok" {
+                    status = "missing";
+                }
+                detail = f.file.clone();
+                continue;
+            }
+            let (size, hash) = hash_file(&target)?;
+            if size != f.size || !hash.eq_ignore_ascii_case(&f.sha256) {
+                let _ = std::fs::remove_file(&target);
+                status = "corrupt";
+                detail = f.file.clone();
+            }
         }
-        let (size, hash) = hash_file(&target)?;
-        if size != m.size || !hash.eq_ignore_ascii_case(&m.sha256) {
-            return Ok(VerifyReport { status: "corrupt".into(), detail: m.file });
-        }
-        return Ok(VerifyReport { status: "ok".into(), detail: m.file });
+        return Ok(VerifyReport { status: status.into(), detail });
     }
 
     match find_game(&app) {

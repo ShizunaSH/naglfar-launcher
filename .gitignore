@@ -11,3 +11,4 @@ src-tauri/game/
 web/changelog.json
 .claude/
 art/v2/
+game-v*/
