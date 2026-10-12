@@ -16,13 +16,6 @@ if (-not (Test-Path (Join-Path $Dossier 'CLR.exe'))) {
 }
 
 $out = Join-Path $PSScriptRoot 'game.json'
-$precedents = @{}
-if (Test-Path $out) {
-    $ancien = Get-Content $out -Raw | ConvertFrom-Json
-    foreach ($f in @($ancien.files)) {
-        if ($f) { $precedents[$f.file] = $f }
-    }
-}
 
 $envoi = Join-Path $PSScriptRoot "game-v$Version"
 if (Test-Path $envoi) { Remove-Item $envoi -Recurse -Force }
@@ -33,21 +26,14 @@ $files = @()
 $bilan = @()
 Get-ChildItem $Dossier -File | Where-Object { $_.Extension -in '.exe', '.pck' } | Sort-Object Name | ForEach-Object {
     $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
-    $connu = $precedents[$_.Name]
-    if ($connu -and $connu.sha256 -eq $hash) {
-        $url = $connu.url
-    } else {
-        $url = "$base/$($_.Name)"
-    }
-    $nouveau = $url.StartsWith($base)
-    if ($nouveau) { Copy-Item $_.FullName $envoi }
+    Copy-Item $_.FullName $envoi
     $files += [ordered]@{
         file   = $_.Name
         size   = $_.Length
         sha256 = $hash
-        url    = $url
+        url    = "$base/$($_.Name)"
     }
-    $bilan += '  {0,-12} {1,8:N1} Mo   {2}' -f $_.Name, ($_.Length / 1MB), $(if ($nouveau) { 'a envoyer' } else { 'inchange' })
+    $bilan += '  {0,-12} {1,8:N1} Mo' -f $_.Name, ($_.Length / 1MB)
 }
 
 $manifest = [ordered]@{
